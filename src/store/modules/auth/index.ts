@@ -62,7 +62,6 @@ export const useAuthStore = defineStore("auth-store", {
 			if (data.code == 200) {
 				await route.initAuthRoute();
 				let user = data.data.user;
-				console.log(data.data.user);
 				await this.loginByToken({
 					token: "dfadf",
 					refreshToken: "dfadf",

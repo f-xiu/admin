@@ -1,6 +1,7 @@
 <template>
-  <n-card :bordered="false" class="rounded-16px shadow-sm">
-    <n-form :model="userinfo" :rules="rules" size="small" label-placement="left" :show-require-mark="false">
+  <n-card :bordered="false" class="rounded-16px shadow-sm" :class="{ 'bg-white': !theme.darkMode }">
+    <n-form :model="userinfo" ref="userFormRef" :rules="rules" size="small" label-placement="left"
+      :show-require-mark="false">
       <n-space vertical :size="10">
         <div class="flex-y-center mb-6">
           <icon-local-avatar class="text-90px" />
@@ -28,7 +29,7 @@
         </div>
         <div class="flex-y-center line">
           <n-form-item label="余额:">
-            <n-input-number :default-value="userinfo.money" :precision="2">
+            <n-input-number v-model:value="userinfo.money" :precision="2" :min="0">
               <template #suffix>¥(元)</template>
             </n-input-number>
           </n-form-item>
@@ -43,37 +44,40 @@
         </n-space>
       </n-space>
     </n-form>
+    <n-modal v-model:show="openModal">
+      <n-card style="width: 400px" title="修改密码" :bordered="false" size="huge" role="dialog" aria-modal="true">
+        <n-form :model="passwords" ref="pwdFormRef" :rules="rules" size="small" label-placement="left"
+          :show-require-mark="false" label-width="auto">
+          <n-form-item path="oldPasswd" rule-path="password" label="旧密码:">
+            <n-input v-model:value="passwords.oldPasswd" type="password" show-password-on="click" size="tiny" />
+          </n-form-item>
+          <n-form-item path="newPasswd" rule-path="password" label="新密码:">
+            <n-input v-model:value="passwords.newPasswd" type="password" show-password-on="click" size="tiny" />
+          </n-form-item>
+          <n-form-item path="againPasswd" rule-path="confirmPsw" label="再次输入:">
+            <n-input v-model:value="passwords.againPasswd" type="password" show-password-on="click" size="tiny" />
+          </n-form-item>
+          <n-button type="primary" size="medium" :block="true" :round="true" @click="handleSubmit">
+            确定
+          </n-button>
+        </n-form>
+      </n-card>
+    </n-modal>
   </n-card>
-  <n-modal v-model:show="openModal">
-    <n-card style="width: 400px" title="修改密码" :bordered="false" size="huge" role="dialog" aria-modal="true">
-      <n-form :model="passwords" :rules="rules" size="small" label-placement="left" :show-require-mark="false"
-        label-width="auto">
-        <n-form-item path="oldPasswd" rule-path="password" label="旧密码:">
-          <n-input v-model:value="passwords.oldPasswd" type="password" show-password-on="click" size="tiny" />
-        </n-form-item>
-        <n-form-item path="newPasswd" rule-path="password" label="新密码:">
-          <n-input v-model:value="passwords.newPasswd" type="password" show-password-on="click" size="tiny" />
-        </n-form-item>
-        <n-form-item path="againPasswd" rule-path="confirmPsw" label="再次输入:">
-          <n-input v-model:value="passwords.againPasswd" type="password" show-password-on="click" size="tiny" />
-        </n-form-item>
-        <n-button type="primary" size="medium" :block="true" :round="true" @click="handleSubmit">
-          确定
-        </n-button>
-      </n-form>
-    </n-card>
-  </n-modal>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref, reactive, toRefs } from 'vue'
 import { getUserInfo, changeUserInfo, changePasswd } from "@/service/simple/user"
-import type { FormRules } from 'naive-ui';
+import type { FormInst, FormRules } from 'naive-ui';
 import { formRules, getConfirmPwdRule } from '@/utils';
 import { useAuthStore } from '~/src/store';
 import { localStg } from '@/utils'
-
-const openModal = ref(false)
+import { useThemeStore } from '@/store';
+const theme = useThemeStore()
 const auth = useAuthStore()
+const openModal = ref(false)
+const pwdFormRef = ref<HTMLElement & FormInst>()
+const userFormRef = ref<HTMLElement & FormInst>()
 const userinfo = ref({
   account: "",
   avatar: null,
@@ -87,7 +91,22 @@ const passwords = reactive({
   newPasswd: '',
   againPasswd: ''
 })
-const handleChangeInfo = () => {
+const rules: FormRules = {
+  name: formRules.name,
+  email: formRules.email,
+  money: formRules.money,
+  password: formRules.password,
+  confirmPsw: getConfirmPwdRule(toRefs(passwords).newPasswd)
+};
+onMounted(() => {
+  //访问接口获取用户个人信息
+  //通过sessionId直接得到对应数据
+  getUserInfo(auth.userInfo.userId).then(res => {
+    userinfo.value = res.data.data;
+  });
+});
+const handleChangeInfo = async () => {
+  await userFormRef.value?.validate()
   changeUserInfo(userinfo.value).then((res) => {
     auth.userInfo.userName = res.data.data.name
     let { name, id } = res.data.data;
@@ -103,9 +122,8 @@ const handleChangeInfo = () => {
     }
   })
 }
-const handleSubmit = () => {
-  console.log(passwords)
-  console.log(auth.userInfo.userId)
+const handleSubmit = async () => {
+  await pwdFormRef.value?.validate();
   changePasswd({
     id: auth.userInfo.userId,
     oldPasswd: passwords.oldPasswd,
@@ -122,14 +140,6 @@ const handleSubmit = () => {
     }
   })
 }
-
-const rules: FormRules = {
-  name: formRules.name,
-  email: formRules.email,
-  money: formRules.money,
-  password: formRules.password,
-  confirmPsw: getConfirmPwdRule(toRefs(passwords).newPasswd)
-};
 const setDefaultUserInfo = () => {
   getUserInfo().then(res => {
     userinfo.value = res.data.data;
@@ -137,15 +147,6 @@ const setDefaultUserInfo = () => {
   });
 
 }
-
-
-onMounted(() => {
-  //访问接口获取用户个人信息
-  //通过sessionId直接得到对应数据
-  getUserInfo().then(res => {
-    userinfo.value = res.data.data;
-  });
-});
 </script>
 <style scoped>
 .label-w {

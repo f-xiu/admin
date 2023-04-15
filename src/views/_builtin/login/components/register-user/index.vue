@@ -30,6 +30,8 @@ import { reactive, ref } from 'vue';
 import type { FormInst, FormRules } from 'naive-ui';
 import { useRouterPush } from '@/composables';
 import { formRules } from '@/utils';
+import { registerAPI } from '@/service/simple/user'
+import { router } from '~/src/router';
 const { toLoginModule } = useRouterPush();
 
 const formRef = ref<HTMLElement & FormInst>();
@@ -59,6 +61,17 @@ async function handleSubmit() {
   }
   //调用注册接口
   console.log(model)
+  registerAPI(model).then(res => {
+    let { code, message } = res.data
+    if (code == 200) {
+      //注册成功,跳转到登录页
+      window.$message?.success("注册成功")
+      router.push('/login')
+    }
+    else {
+      window.$message?.error("注册失败" + message)
+    }
+  })
 }
 </script>
 

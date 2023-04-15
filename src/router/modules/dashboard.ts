@@ -20,7 +20,7 @@ const dashboard: AuthRoute.Route = {
 			meta: {
 				title: "个人信息",
 				requiresAuth: true,
-				icon: "icon-park-outline:workbench",
+				icon: "system-uicons:info-circle",
 			},
 		},
 	],

@@ -22,14 +22,13 @@ declare namespace PageRoute {
     | 'constant-page'
     | 'login'
     | 'not-found'
-    | 'about'
     | 'dashboard'
     | 'dashboard_analysis'
     | 'dashboard_userinfo'
-    | 'plugin'
-    | 'plugin_editor'
-    | 'plugin_editor_markdown'
-    | 'plugin_editor_quill';
+    | 'filemanage'
+    | 'filemanage_userfilemanage'
+    | 'filemanage_userself'
+    | 'usermanage';
 
   /**
    * last degree route key, which has the page file
@@ -43,10 +42,10 @@ declare namespace PageRoute {
     | 'constant-page'
     | 'login'
     | 'not-found'
-    | 'about'
     | 'dashboard_analysis'
     | 'dashboard_userinfo'
-    | 'plugin_editor_markdown'
-    | 'plugin_editor_quill'
+    | 'filemanage_userfilemanage'
+    | 'filemanage_userself'
+    | 'usermanage'
   >;
 }

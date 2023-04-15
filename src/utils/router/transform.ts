@@ -10,7 +10,6 @@ export function transformAuthRouteToVueRoutes(routes: AuthRoute.Route[]) {
 	let v_routes = routes
 		.map((route) => transformAuthRouteToVueRoute(route))
 		.flat(1);
-	console.log(v_routes);
 	return v_routes;
 }
 
